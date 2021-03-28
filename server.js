@@ -6,6 +6,8 @@ const cors = require('cors');
 const multer=require('multer')
 const path = require('path')
 const fs = require('fs')
+const csv=require('csvtojson')
+
 
 // connecting the mongo database
 const MongoClient = require('mongodb').MongoClient;
@@ -17,7 +19,6 @@ const port =30001
 // file type convert to json data
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
-
 app.use(cors());
 
 //file upload process
@@ -36,40 +37,44 @@ const storage = multer.diskStorage({
 //upload system code
 const upload = multer({
     storage: storage,
-    limits:{
-        fileSize:1000000, //user can upload there image up to 1 MB
-    },
-
     //file type like jpeg, jpg, png user only can upload this type of image
     fileFilter:(req,file,cb) => {
         if(file.fieldname === 'avatar'){
             if(
-                file.mimetype ==='image/jpeg'||
-                file.mimetype ==='image/jpg' ||
-                file.mimetype ==='image/png'
+                file.mimetype ==='text/csv'
+                
             ){
                 cb (null,true);
             }
             else{
-                cb (new Error("only .jpg , .png, .jpeg format image are Allowed"));
+                cb (new Error("only CSV format image are Allowed"));
             }
         }
     }
 })
+
 //connecting to the mongodb
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.0oz1r.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+const uri = "mongodb+srv://test:testS@cluster0.0aziu.mongodb.net/TestSimple?retryWrites=true&w=majority";
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true ,connectTimeoutMS: 30000 ,  keepAlive: 1});
 client.connect(err => {
-  const PostCollection = client.db(process.env.DB_NAME).collection("UserPost");
-  // perform actions on the collection object
+  const csvCollection = client.db("TestSimple").collection("Simple")
+  const othesCollection = client.db("TestSimple").collection("others")
+  const loginCollection = client.db("TestSimple").collection("login")
   console.log("data base connect");
-  app.post('/upload',upload.array("avatar",5),(req,res) => {
-const message=req.body.message
-const files=req.files
-PostCollection.insertOne({image:files,message:message})
+  app.post('/upload',upload.single("avatar"),(req,res) => {
+// const message=req.body.message
+const files=req.file.path
+const csvFilePath=files
+csv()
+.fromFile(csvFilePath)
+.then((csv)=>{
+   csvCollection.insertMany(csv)
 .then(result => {
     res.send(result.insertedCount > 0)
 })
+})
+
+
 // let img=fs.readFileSync(req.files.avatar[0].path);
 // let encode_image=img.toString('base64')
 // let finalImg={
@@ -82,15 +87,94 @@ PostCollection.insertOne({image:files,message:message})
 // console.log(req.files.avatar[0].path)
 })
 
-app.get("/posts",(req,res)=>{
-    PostCollection.find({})
+app.get("/allCsv",(req,res,next)=>{
+    const search=req.query.sc
+    // console.log(search)
+    csvCollection.find({Mobile:search})
+        .toArray((err, documents) => {
+            if(documents.length<=0){
+                csvCollection.find({NID:search})
+        .toArray((err, documents) => {
+            if(documents<=0){
+                
+                csvCollection.find({"MIS ID":search})
+                .toArray((err, documents) => {
+                    if(documents<=0){
+                        csvCollection.find({"Name In English":search})
+                        .toArray((err, documents) => {
+                            res.send(documents);
+                        })
+                    }else{
+                        res.send(documents);
+                    }
+                })
+            }else{
+                res.send(documents);
+            }
+        })
+            }else{
+                res.send(documents);
+            }
+        })
+        
+})
+app.post('/others',(req,res) => {
+    // const message=req.body.message
+     const number=req.body.number
+     const agentEmail=req.body.agentEmail
+     const preNumber=req.body.preNumber
+     if(number==preNumber){
+        othesCollection.insertMany({New_Number:number,agentEmail:agentEmail,Remarks:"same",preNumber:preNumber})
+        .then(result => {
+            res.send(result.insertedCount > 0)
+        })
+     }else{
+        othesCollection.insertOne({New_Number:number,agentEmail:agentEmail,Remarks:"change",preNumber:preNumber})
+        .then(result => {
+            res.send(result.insertedCount > 0)
+        })
+     }
+    })
+    app.get('/allothers',(req,res)=>{
+        const oh=req.query.oh
+        othesCollection.find({New_Number:oh})
         .toArray((err, documents) => {
             res.send(documents);
         })
-})
-//   client.close();
+    })
+// app.put('/update/:id',(req,res)=>{
+//     const id=req.params.id
+//     const number=req.body.number
+//     const myquery = {_id:id};
+//     const newvalues = { $set: {New_Number:number,_id:"hi"} };
+//     console.log(number)
+//     csvCollection.updateOne(myquery, newvalues, function(err, res) {
+//         if (err) throw err;
+//         console.log("1 document updated");
+//       });
+    
+
+// })
+app.post('/login',(req,res) => {
+    // const message=req.body.message
+     const email=req.body.email
+     const password=req.body.password
+     loginCollection.insertOne({email:email,password:password})
+        .then(result => {
+            res.send(result.insertedCount > 0)
+        })
+    
+    })
+    app.get('/loginMatch',(req,res)=>{
+        const email=req.query.email
+        // console.log(email)
+        const password=req.query.password
+        loginCollection.find({email:email})
+        .toArray((err, documents) => {
+            res.send(documents);
+        })
+    })
+// //   client.close();
 });
-
-
 
 app.listen(process.env.PORT || port)
