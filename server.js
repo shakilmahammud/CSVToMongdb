@@ -138,6 +138,13 @@ app.get("/allCsv",(req,res,next)=>{
         })
         
 })
+app.get('/',(req,res)=>{
+    if(res.status==200){
+        res.send("Api ok")
+    }else{
+        res.send("Check Your Connection")
+    }
+})
 app.get('/dwonloadCsv',(req,res)=>{
     csvCollection.find({})
     .toArray((err, documents) => {
