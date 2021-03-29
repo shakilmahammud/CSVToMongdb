@@ -60,6 +60,7 @@ client.connect(err => {
   const csvCollection = client.db("TestSimple").collection("Simple")
   const othesCollection = client.db("TestSimple").collection("others")
   const loginCollection = client.db("TestSimple").collection("login")
+  const editCollection = client.db("TestSimple").collection("CountEdit")
   console.log("data base connect");
   app.post('/upload',upload.single("avatar"),(req,res) => {
 // const message=req.body.message
@@ -161,6 +162,24 @@ app.post('/others',(req,res) => {
     
 
 // })
+app.post('/coutEdit',(req,res) => {
+    // const message=req.body.message
+     const email=req.body.email
+     const count=req.body.count
+     editCollection.insertOne({email:email,count:count})
+        .then(result => {
+            res.send(result.insertedCount > 0)
+        })
+    
+    })
+    app.get('/totalaCount',(req,res) => {
+        // const message=req.body.message
+        const email=req.query.email
+        editCollection.find({email:email})
+        .toArray((err, documents) => {
+            res.send(documents);
+        })
+        })
 app.post('/login',(req,res) => {
     // const message=req.body.message
      const email=req.body.email
