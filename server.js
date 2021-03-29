@@ -139,11 +139,7 @@ app.get("/allCsv",(req,res,next)=>{
         
 })
 app.get('/',(req,res)=>{
-    if(res.status==200){
-        res.send("Api ok")
-    }else{
-        res.send("Check Your Connection")
-    }
+    res.status(200).send("Api ok")
 })
 app.get('/dwonloadCsv',(req,res)=>{
     csvCollection.find({})
