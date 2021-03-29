@@ -7,6 +7,7 @@ const multer=require('multer')
 const path = require('path')
 const fs = require('fs')
 const csv=require('csvtojson')
+const objectId=require('mongodb').ObjectID
 
 
 // connecting the mongo database
@@ -76,6 +77,7 @@ csv()
 })
 
 
+
 // let img=fs.readFileSync(req.files.avatar[0].path);
 // let encode_image=img.toString('base64')
 // let finalImg={
@@ -87,6 +89,28 @@ csv()
 // res.send(finalImg.image)
 // console.log(req.files.avatar[0].path)
 })
+app.post('/update/:id',(req,res) => {
+    // const message=req.body.message
+   const id=req.params.id
+   const number=req.body.preNumber
+   const newNumber=req.body.number
+   const agentMail=req.body.agentEmail
+   if(number==newNumber){
+       csvCollection.updateMany({_id:objectId(id)},{$set:{New_Number:newNumber,Agent_Email:agentMail,Remark:"Same"}},function(err,result){
+        console.log("inserted")
+        // db.close()
+    })
+   }else{
+        csvCollection.updateMany({_id:objectId(id)},{$set:{New_Number:newNumber,Agent_Email:agentMail,Remark:"Change"}},function(err,result){
+         console.log("inserted")
+         // db.close()
+     })
+   }
+    // csvCollection.updateOne({_id:objectId(id)},{$set:{New_Number:"01637"}},function(err,result){
+    //     console.log("inserted")
+    //     // db.close()
+    // })
+    })
 
 app.get("/allCsv",(req,res,next)=>{
     const search=req.query.sc
@@ -125,30 +149,31 @@ app.get('/dwonloadCsv',(req,res)=>{
         res.send(documents);
     })
 })
-app.post('/others',(req,res) => {
-    // const message=req.body.message
-     const number=req.body.number
-     const agentEmail=req.body.agentEmail
-     const preNumber=req.body.preNumber
-     if(number==preNumber){
-        othesCollection.insertMany({New_Number:number,agentEmail:agentEmail,Remarks:"same",preNumber:preNumber})
-        .then(result => {
-            res.send(result.insertedCount > 0)
-        })
-     }else{
-        othesCollection.insertOne({New_Number:number,agentEmail:agentEmail,Remarks:"change",preNumber:preNumber})
-        .then(result => {
-            res.send(result.insertedCount > 0)
-        })
-     }
-    })
-    app.get('/allothers',(req,res)=>{
-        const oh=req.query.oh
-        othesCollection.find({New_Number:oh})
-        .toArray((err, documents) => {
-            res.send(documents);
-        })
-    })
+// app.post('/others',(req,res) => {
+//     // const message=req.body.message
+//      const number=req.body.number
+//      const agentEmail=req.body.agentEmail
+//      const preNumber=req.body.preNumber
+//      console.log(number,agentEmail,preNumber)
+//      if(number==preNumber){
+//         othesCollection.insertMany({New_Number:number,agentEmail:agentEmail,Remarks:"same",preNumber:preNumber})
+//         .then(result => {
+//             res.send(result.insertedCount > 0)
+//         })
+//      }else{
+//         othesCollection.insertOne({New_Number:number,agentEmail:agentEmail,Remarks:"change",preNumber:preNumber})
+//         .then(result => {
+//             res.send(result.insertedCount > 0)
+//         })
+//      }
+//     })
+//     app.get('/allothers',(req,res)=>{
+//         const oh=req.query.oh
+//         othesCollection.find({New_Number:oh})
+//         .toArray((err, documents) => {
+//             res.send(documents);
+//         })
+//     })
 // app.put('/update/:id',(req,res)=>{
 //     const id=req.params.id
 //     const number=req.body.number
