@@ -118,6 +118,12 @@ app.get("/allCsv",(req,res,next)=>{
         })
         
 })
+app.get('/dwonloadCsv',(req,res)=>{
+    csvCollection.find({})
+    .toArray((err, documents) => {
+        res.send(documents);
+    })
+})
 app.post('/others',(req,res) => {
     // const message=req.body.message
      const number=req.body.number
