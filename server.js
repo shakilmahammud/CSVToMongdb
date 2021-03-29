@@ -56,7 +56,7 @@ const upload = multer({
 
 //connecting to the mongodb
 const uri = "mongodb+srv://test:testS@cluster0.0aziu.mongodb.net/TestSimple?retryWrites=true&w=majority";
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true ,connectTimeoutMS: 30000 ,  keepAlive: 1});
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true ,});
 client.connect(err => {
   const csvCollection = client.db("TestSimple").collection("Simple")
   const loginCollection = client.db("TestSimple").collection("login")
@@ -74,7 +74,6 @@ csv()
     res.status(200).send("File Upload Done .")
 })
 })
-
 
 
 // let img=fs.readFileSync(req.files.avatar[0].path);
