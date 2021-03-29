@@ -71,7 +71,7 @@ csv()
 .then((csv)=>{
    csvCollection.insertMany(csv)
 .then(result => {
-    res.send(result.insertedCount > 0)
+    res.status(200).send("File Upload Done .")
 })
 })
 
