@@ -59,7 +59,6 @@ const uri = "mongodb+srv://test:testS@cluster0.0aziu.mongodb.net/TestSimple?retr
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true ,connectTimeoutMS: 30000 ,  keepAlive: 1});
 client.connect(err => {
   const csvCollection = client.db("TestSimple").collection("Simple")
-  const othesCollection = client.db("TestSimple").collection("others")
   const loginCollection = client.db("TestSimple").collection("login")
   const editCollection = client.db("TestSimple").collection("CountEdit")
   console.log("data base connect");
@@ -106,10 +105,6 @@ app.post('/update/:id',(req,res) => {
          // db.close()
      })
    }
-    // csvCollection.updateOne({_id:objectId(id)},{$set:{New_Number:"01637"}},function(err,result){
-    //     console.log("inserted")
-    //     // db.close()
-    // })
     })
 
 app.get("/allCsv",(req,res,next)=>{
@@ -146,9 +141,50 @@ app.get("/allCsv",(req,res,next)=>{
 app.get('/dwonloadCsv',(req,res)=>{
     csvCollection.find({})
     .toArray((err, documents) => {
-        res.send(documents);
+        res.status(200).send(documents);
     })
 })
+app.post('/coutEdit',(req,res) => {
+    // const message=req.body.message
+     const email=req.body.email
+     const count=req.body.count
+     editCollection.insertOne({email:email,count:count})
+        .then(result => {
+            res.send(result.insertedCount > 0)
+        })
+    
+    })
+    app.get('/totalaCount',(req,res) => {
+        // const message=req.body.message
+        const email=req.query.email
+        editCollection.find({email:email})
+        .toArray((err, documents) => {
+            res.status(200).send(documents);
+        })
+        })
+app.post('/login',(req,res) => {
+    // const message=req.body.message
+     const email=req.body.email
+     const password=req.body.password
+     loginCollection.insertOne({email:email,password:password})
+        .then(result => {
+            res.status.send(result.insertedCount > 0)
+        }).catch(err=>{
+            res.send(err)
+        })
+            
+        
+    
+    })
+    app.get('/loginMatch',(req,res)=>{
+        const email=req.query.email
+        // console.log(email)
+        const password=req.query.password
+        loginCollection.find({email:email})
+        .toArray((err, documents) => {
+            res.status(200).send(documents);
+        })
+    })
 // app.post('/others',(req,res) => {
 //     // const message=req.body.message
 //      const number=req.body.number
@@ -184,46 +220,7 @@ app.get('/dwonloadCsv',(req,res)=>{
 //         if (err) throw err;
 //         console.log("1 document updated");
 //       });
-    
-
 // })
-app.post('/coutEdit',(req,res) => {
-    // const message=req.body.message
-     const email=req.body.email
-     const count=req.body.count
-     editCollection.insertOne({email:email,count:count})
-        .then(result => {
-            res.send(result.insertedCount > 0)
-        })
-    
-    })
-    app.get('/totalaCount',(req,res) => {
-        // const message=req.body.message
-        const email=req.query.email
-        editCollection.find({email:email})
-        .toArray((err, documents) => {
-            res.send(documents);
-        })
-        })
-app.post('/login',(req,res) => {
-    // const message=req.body.message
-     const email=req.body.email
-     const password=req.body.password
-     loginCollection.insertOne({email:email,password:password})
-        .then(result => {
-            res.send(result.insertedCount > 0)
-        })
-    
-    })
-    app.get('/loginMatch',(req,res)=>{
-        const email=req.query.email
-        // console.log(email)
-        const password=req.query.password
-        loginCollection.find({email:email})
-        .toArray((err, documents) => {
-            res.send(documents);
-        })
-    })
 // //   client.close();
 });
 
