@@ -1,11 +1,10 @@
-// import express
+ 
 const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')
 const cors = require('cors');
 const multer=require('multer')
 const path = require('path')
-const fs = require('fs')
 const csv=require('csvtojson')
 const objectId=require('mongodb').ObjectID
 
@@ -15,19 +14,20 @@ const MongoClient = require('mongodb').MongoClient;
 require('dotenv').config()
 
 // decleare of the port
-const port =30001
+const port =40001
 
 // file type convert to json data
-app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({ extended: false }))
+app.use(express.json())
 app.use(cors());
 
 //file upload process
 const upload_folder = './Upload/';
 const storage = multer.diskStorage({
-    destination:(req,file,cb) => {
- cb(null,upload_folder)
-    },
+//     destination:(req,file,cb) => {
+//  cb(null,upload_folder)
+//     },
     filename:(req,file,cb) => {
         const fileExt = path.extname(file.originalname);
         const fileName = file.originalname.replace(fileExt,"").toLocaleLowerCase().split(" ").join("_") + "_" + Date.now();
@@ -55,7 +55,7 @@ const upload = multer({
 })
 
 //connecting to the mongodb
-const uri = "mongodb+srv://test:testS@cluster0.0aziu.mongodb.net/TestSimple?retryWrites=true&w=majority";
+const uri = "mongodb://localhost:27017";
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true ,});
 client.connect(err => {
   const csvCollection = client.db("TestSimple").collection("Simple")
@@ -74,18 +74,6 @@ csv()
     res.status(200).send("File Upload Done .")
 })
 })
-
-
-// let img=fs.readFileSync(req.files.avatar[0].path);
-// let encode_image=img.toString('base64')
-// let finalImg={
-//     contentType:req.files.avatar[0].mimetype,
-//     path:req.files.avatar[0].path,
-//     image:new Buffer(encode_image,'base64')
-// }      
-// res.contentType(finalImg.contentType)
-// res.send(finalImg.image)
-// console.log(req.files.avatar[0].path)
 })
 app.post('/update/:id',(req,res) => {
     // const message=req.body.message
@@ -93,23 +81,28 @@ app.post('/update/:id',(req,res) => {
    const number=req.body.preNumber
    const newNumber=req.body.number
    const agentMail=req.body.agentEmail
+   const pageNumber=req.body.page_number
    if(number==newNumber){
-       csvCollection.updateMany({_id:objectId(id)},{$set:{New_Number:newNumber,Agent_Email:agentMail,Remark:"Same"}},function(err,result){
+       csvCollection.updateMany({_id:objectId(id)},{$set:{New_Number:newNumber,Agent_Email:agentMail,Remark:"Same","page_number":pageNumber}},function(err,result){
         console.log("inserted")
         // db.close()
     })
-   }else{
-        csvCollection.updateMany({_id:objectId(id)},{$set:{New_Number:newNumber,Agent_Email:agentMail,Remark:"Change"}},function(err,result){
-         console.log("inserted")
-         // db.close()
-     })
-   }
+   } else if(number==""){
+    csvCollection.updateMany({_id:objectId(id)},{$set:{New_Number:newNumber,Agent_Email:agentMail,Remark:"New","page_number":pageNumber}},function(err,result){
+        console.log("inserted")
+   })
+}else{
+    csvCollection.updateMany({_id:objectId(id)},{$set:{New_Number:newNumber,Agent_Email:agentMail,Remark:"Change","page_number":pageNumber}},function(err,result){
+     console.log("inserted")
+     // db.close()
+ })
+}
     })
 
 app.get("/allCsv",(req,res,next)=>{
     const search=req.query.sc
     // console.log(search)
-    csvCollection.find({Mobile:search})
+    csvCollection.find({phone:search})
         .toArray((err, documents) => {
             if(documents.length<=0){
                 csvCollection.find({NID:search})
@@ -187,42 +180,95 @@ app.post('/login',(req,res) => {
             res.status(200).send(documents);
         })
     })
-// app.post('/others',(req,res) => {
-//     // const message=req.body.message
-//      const number=req.body.number
-//      const agentEmail=req.body.agentEmail
-//      const preNumber=req.body.preNumber
-//      console.log(number,agentEmail,preNumber)
-//      if(number==preNumber){
-//         othesCollection.insertMany({New_Number:number,agentEmail:agentEmail,Remarks:"same",preNumber:preNumber})
-//         .then(result => {
-//             res.send(result.insertedCount > 0)
-//         })
-//      }else{
-//         othesCollection.insertOne({New_Number:number,agentEmail:agentEmail,Remarks:"change",preNumber:preNumber})
-//         .then(result => {
-//             res.send(result.insertedCount > 0)
-//         })
-//      }
-//     })
-//     app.get('/allothers',(req,res)=>{
-//         const oh=req.query.oh
-//         othesCollection.find({New_Number:oh})
-//         .toArray((err, documents) => {
-//             res.send(documents);
-//         })
-//     })
-// app.put('/update/:id',(req,res)=>{
-//     const id=req.params.id
-//     const number=req.body.number
-//     const myquery = {_id:id};
-//     const newvalues = { $set: {New_Number:number,_id:"hi"} };
-//     console.log(number)
-//     csvCollection.updateOne(myquery, newvalues, function(err, res) {
-//         if (err) throw err;
-//         console.log("1 document updated");
-//       });
-// })
+    app.post('/new',(req,res)=>{
+        
+        const id=req.body.id
+        const diid=req.body.diid
+        const bn_id=req.body.bn_id
+        const nid=req.body.nid
+        const bn_name=req.body.bn_name
+        const En_Name=req.body.En_Name
+        const Bn_M_Name=req.body.Bn_M_Name
+        const En_M_Name=req.body.En_M_Name
+        const Bn_F_Name=req.body.Bn_F_Name
+        const En_F_Name=req.body.En_F_Name
+        const H_W_Name=req.body.H_W_Name
+        const dOB=req.body.dOB
+        const Age=req.body.Age
+        const District=req.body.District
+        const upuzela_Thana=req.body.upuzela_Thana
+        const Ward=req.body.Ward
+        const Village=req.body.Village
+        const Religion=req.body.Religion
+        const Occupation=req.body.Occupation
+        const Gender=req.body.Gender
+        const Mobile=req.body.Mobile
+        const Program_Name=req.body.Program_Name
+        const Pass_Book_No=req.body.Pass_Book_No
+        const Bank_Name=req.body.Bank_Name
+        const Bank_Branch=req.body.Bank_Branch
+        const Account_Status=req.body.Account_Status
+        const Bank_Account_No=req.body.Bank_Account_No
+        const Stipend_Date=req.body.Stipend_Date
+        const phone=req.body.phone 
+        const Phone_Owner=req.body.Phone_Owner
+        const Bn_Status=req.body.Bn_Status
+        const Nid_Status=req.body.Nid_Status
+        const Approval_Status=req.bodyApproval_Status
+        const User_Name=req.body.User_Name
+        const user_id =req.body.user_id
+        const Agent_mail=req.body.Agent_mail
+        const New_Number=req.body.New_Number
+        const Remarks =req.body.Remarks
+        const page_number=req.body.page_number
+        if(id!==""){
+            csvCollection.insertMany([{ 
+                "id":id,
+                "diid":diid,
+                "bn_id":bn_id,
+                "nid":nid,
+                "bn_name":bn_name,
+                "En_Name":En_Name,
+                "Bn_M_Name":Bn_M_Name,
+                "En_M_Name":En_M_Name,
+                "Bn_F_Name":Bn_F_Name,
+               "En_F_Name":En_F_Name,
+               "H_W_Name":H_W_Name,
+               "DOB":dOB,
+               "Age":Age,
+               "District":District,
+               "upuzela_Thana":upuzela_Thana,
+               "Ward":Ward,
+               "Village":Village,
+              "Religion":Religion,
+              "Occupation":Occupation,
+              "Gender":Gender,
+              "Mobile":Mobile,
+              "Program_Name":Program_Name,
+              "Pass_Book_No":Pass_Book_No,
+              "Bank_Name":Bank_Name,
+            "Bank_Branch":Bank_Branch,
+            "Account_Status":Account_Status,
+            "Bank_Account_No":Bank_Account_No,
+            "Stipend_Date":Stipend_Date,
+            "phone":phone,
+            "Phone_Owner":Phone_Owner,
+            "Bn_Status"  :Bn_Status,
+            "Nid_Status":Nid_Status,
+            "Approval_Status":Approval_Status,
+            "User_Name":User_Name,
+            "user_id":user_id,
+            "Agent_mail":Agent_mail,
+            "New_Number":New_Number,
+            "Remarks":Remarks,
+           "page_number":page_number
+        }])
+        .then(result => {
+            res.status(200).send("Excle Data Entry Done .")
+        })
+        }
+    })
+
 // //   client.close();
 });
 
