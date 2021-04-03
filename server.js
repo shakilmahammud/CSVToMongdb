@@ -42,7 +42,8 @@ const upload = multer({
     fileFilter:(req,file,cb) => {
         if(file.fieldname === 'avatar'){
             if(
-                file.mimetype ==='text/csv'
+                file.mimetype ==='text/csv'||
+                file.mimetype==='application/vnd.ms-excel'
                 
             ){
                 cb (null,true);
@@ -51,11 +52,12 @@ const upload = multer({
                 cb (new Error("only CSV format image are Allowed"));
             }
         }
+       
     }
 })
 
 //connecting to the mongodb
-const uri = "mongodb://localhost:27017";
+const uri = "mongodb://192.168.0.106:27017";
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true ,});
 client.connect(err => {
   const csvCollection = client.db("TestSimple").collection("Simple")
